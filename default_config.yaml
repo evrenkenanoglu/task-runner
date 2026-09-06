@@ -1,0 +1,12 @@
+app:
+  name: "app"
+  version: "0.1.0"
+
+python:
+  version: "3.13"
+
+paths:
+  workspace_dir: "."
+  tool_dir: "./Tools/task-runner"
+  venv_dir: "{workspace_dir}/.venv"
+  requirements_file: "{tool_dir}/requirements.txt"

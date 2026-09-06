@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "task-runner"
+version = "0.1.0"
+description = "Generic cross-platform task automation framework based on Invoke"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "invoke>=2.2.0",
+    "pyyaml>=6.0",
+    "uv>=0.4.0",
+]
+
+[project.scripts]
+task = "invoke.main:program.run"
