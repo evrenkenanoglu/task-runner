@@ -46,10 +46,15 @@ class CommandSerializer:
         for idx, cmd in enumerate(cmd_list, start=1):
             print(f"{idx}. {cmd}")
 
-        # print(f"\n[Command Serialized (JSON)]:\n{serialized_json}")
+        print(f"\n[Command Serialized (JSON)]:\n{serialized_json}")
         print(f"\n[Command Serialized (String)]:\n{serialized_str}\n")
 
         if not dry_run:
-            c.run(serialized_str, env=self.env, pty=self.pty)
+            c.run(
+                serialized_str,
+                env=self.env,
+                pty=self.pty,
+                encoding="utf-8",
+            )
         else:
             print("[DRY-RUN]: Execution skipped.")

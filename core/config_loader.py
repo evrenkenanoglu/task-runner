@@ -1,14 +1,23 @@
 import os
 import platform
+import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 import yaml
 
 IS_WINDOWS = platform.system() == "Windows"
 TOOL_DIR = Path(__file__).resolve().parent.parent
 
+# Force parent Python process streams to UTF-8 on Windows
+if IS_WINDOWS:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+
 def find_workspace_root() -> Path:
-    """Detect workspace root by looking upward from CWD for project markers."""
     cwd = Path.cwd().resolve()
     for directory in [cwd, *cwd.parents]:
         if (
@@ -23,7 +32,6 @@ def find_workspace_root() -> Path:
 WORKSPACE_DIR = find_workspace_root()
 
 class ConfigNode(dict):
-    """Allows dot-notation attribute access on dictionary keys."""
     def __getattr__(self, name: str) -> Any:
         try:
             val = self[name]
@@ -37,7 +45,6 @@ class ConfigNode(dict):
         self[name] = value
 
 def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
-    """Recursively merge override dictionary into base dictionary."""
     merged = base.copy()
     for key, val in override.items():
         if isinstance(val, dict) and key in merged and isinstance(merged[key], dict):
@@ -47,7 +54,6 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
     return merged
 
 def _expand_placeholders(val: Any, context: Dict[str, str]) -> Any:
-    """Recursively expand {placeholder} strings."""
     if isinstance(val, str):
         for _ in range(3):
             try:
@@ -62,7 +68,6 @@ def _expand_placeholders(val: Any, context: Dict[str, str]) -> Any:
     return val
 
 def _resolve_paths(paths_dict: Dict[str, Any]) -> Dict[str, Path]:
-    """Convert all path strings into resolved pathlib.Path objects."""
     resolved = {}
     for key, val in paths_dict.items():
         if isinstance(val, str):
@@ -75,14 +80,12 @@ def _resolve_paths(paths_dict: Dict[str, Any]) -> Dict[str, Path]:
     return resolved
 
 def load_config() -> ConfigNode:
-    # 1. Load default base config
     default_cfg_path = TOOL_DIR / "default_config.yaml"
     base_data: Dict[str, Any] = {}
     if default_cfg_path.exists():
         with default_cfg_path.open("r", encoding="utf-8") as f:
             base_data = yaml.safe_load(f) or {}
 
-    # 2. Load root workspace config
     root_cfg_path = WORKSPACE_DIR / "config_tasks.yaml"
     if not root_cfg_path.exists():
         root_cfg_path = WORKSPACE_DIR / "config.yaml"
@@ -94,16 +97,13 @@ def load_config() -> ConfigNode:
 
     merged_config = deep_merge(base_data, root_data)
 
-    # 3. Discover and merge module-level config_tasks.yaml files (e.g. embedded_system/)
     for sub_config_path in WORKSPACE_DIR.glob("*/config_tasks.yaml"):
-        # Skip root config already loaded
         if sub_config_path.resolve() == root_cfg_path.resolve():
             continue
         with sub_config_path.open("r", encoding="utf-8") as f:
             sub_data = yaml.safe_load(f) or {}
             merged_config = deep_merge(merged_config, sub_data)
 
-    # 4. Context for placeholder expansion
     context = {
         "workspace_dir": str(WORKSPACE_DIR),
         "tool_dir": str(TOOL_DIR),
@@ -112,10 +112,8 @@ def load_config() -> ConfigNode:
         if isinstance(v, str):
             context[k] = _expand_placeholders(v, context)
 
-    # 5. Expand placeholders across all sections
     expanded = _expand_placeholders(merged_config, context)
 
-    # 6. Convert 'paths' section entries to Path instances
     paths_section = _resolve_paths(expanded.get("paths", {}))
     paths_section["workspace_dir"] = WORKSPACE_DIR
     paths_section["tool_dir"] = TOOL_DIR
@@ -125,7 +123,6 @@ def load_config() -> ConfigNode:
     paths_section["venv_bin_dir"] = venv_bin_dir
     expanded["paths"] = paths_section
 
-    # 7. Environment & Activation commands
     if IS_WINDOWS:
         venv_activate_cmd = f'call "{venv_bin_dir / "activate.bat"}"'
     else:
@@ -135,6 +132,9 @@ def load_config() -> ConfigNode:
     if venv_bin_dir.exists():
         execution_env["PATH"] = f"{venv_bin_dir}{os.pathsep}{execution_env.get('PATH', '')}"
         execution_env["VIRTUAL_ENV"] = str(venv_dir)
+
+    execution_env["PYTHONIOENCODING"] = "utf-8"
+    execution_env["PYTHONUTF8"] = "1"
 
     expanded["env"] = execution_env
     expanded["venv_activate_cmd"] = venv_activate_cmd
