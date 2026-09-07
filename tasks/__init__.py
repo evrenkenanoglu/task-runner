@@ -3,7 +3,17 @@ from pathlib import Path
 import sys
 from invoke import Collection
 
-from core.config_loader import CONFIG, TOOL_DIR, WORKSPACE_DIR
+# 1. Resolve TOOL_DIR and inject into sys.path before importing internal packages
+TOOL_DIR = Path(__file__).resolve().parent.parent
+if str(TOOL_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOL_DIR))
+
+# 2. Internal imports
+from core.config_loader import CONFIG, WORKSPACE_DIR
+
+# Ensure workspace root is also in sys.path
+if WORKSPACE_DIR.exists() and str(WORKSPACE_DIR) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_DIR))
 
 # Directories to ignore during auto-discovery
 IGNORE_DIRS = {
@@ -17,11 +27,6 @@ IGNORE_DIRS = {
     ".vscode",
     TOOL_DIR.name,
 }
-
-# Ensure sys.path includes tool and workspace roots
-for d in [TOOL_DIR, WORKSPACE_DIR]:
-    if d.exists() and str(d) not in sys.path:
-        sys.path.insert(0, str(d))
 
 ns = Collection()
 
@@ -83,7 +88,6 @@ for name in ["Tasks", "tasks"]:
 # ----------------------------------------------------------------------
 # 3. Dynamic Subproject Discovery (e.g. <subfolder>/Tasks/)
 # ----------------------------------------------------------------------
-# Optional namespace aliases from config (e.g. embedded_system -> es)
 aliases = CONFIG.get("task_namespaces", {})
 
 for item in WORKSPACE_DIR.iterdir():
@@ -93,12 +97,10 @@ for item in WORKSPACE_DIR.iterdir():
     for tasks_folder_name in ["Tasks", "tasks"]:
         candidate = item / tasks_folder_name
         if candidate.exists() and candidate.is_dir():
-            # Determine namespace: check for configured alias, else use folder name
             namespace = aliases.get(item.name, item.name).lower()
-            
             sub_collection = Collection(namespace)
             register_directory(candidate, sub_collection, prefix=namespace)
-            
+
             if sub_collection.tasks or sub_collection.collections:
                 ns.add_collection(sub_collection)
             break
