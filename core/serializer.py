@@ -5,6 +5,15 @@ from invoke import Context
 
 IS_WINDOWS = platform.system() == "Windows"
 
+# ANSI Color Codes
+RESET = "\033[0m"
+BOLD = "\033[1m"
+CYAN = "\033[36m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+MAGENTA = "\033[35m"
+GRAY = "\033[90m"
+
 class CommandSerializer:
     """Encapsulates command chaining, formatting, logging, and execution."""
 
@@ -42,12 +51,18 @@ class CommandSerializer:
         serialized_json = json.dumps(cmd_list)
         serialized_str = self.serialize()
 
-        print("\n[Command List]:")
+        # 1. Numbered Command List
+        print(f"\n{BOLD}{CYAN}[COMMAND LIST]:{RESET}")
         for idx, cmd in enumerate(cmd_list, start=1):
-            print(f"{idx}. {cmd}")
+            print(f"  {YELLOW}{idx}.{RESET} {GREEN}{cmd}{RESET}")
 
-        print(f"\n[Command Serialized (JSON)]:\n{serialized_json}")
-        print(f"\n[Command Serialized (String)]:\n{serialized_str}\n")
+        # 2. Serialized JSON Representation
+        # print(f"\n{BOLD}{CYAN}[Command Serialized (JSON)]:{RESET}")
+        # print(f"  {MAGENTA}{serialized_json}{RESET}")
+
+        # 3. Serialized Shell String
+        print(f"\n{BOLD}{CYAN}[COMMAND SERIALIZED]:{RESET}")
+        print(f"  {BOLD}{GREEN}{serialized_str}{RESET}\n")
 
         if not dry_run:
             c.run(
@@ -57,4 +72,4 @@ class CommandSerializer:
                 encoding="utf-8",
             )
         else:
-            print("[DRY-RUN]: Execution skipped.")
+            print(f"{BOLD}{YELLOW}[DRY-RUN]: Execution skipped.{RESET}\n")
