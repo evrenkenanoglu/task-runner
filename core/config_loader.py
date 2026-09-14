@@ -124,13 +124,20 @@ def load_config() -> ConfigNode:
 
     for _ in range(5):
         context = flatten_dict(merged_config)
-        # Context aliases
+        
+        # Inject standard root aliases
         context["workspace_dir"] = root_str
         context["project_root"] = root_str
         context["project_root_dir"] = root_str
         context["paths.workspace_dir"] = root_str
         context["tool_dir"] = tool_str
         context["paths.tool_dir"] = tool_str
+
+        # Automatically alias all paths keys with and without 'paths.' prefix
+        for k, v in merged_config.get("paths", {}).items():
+            if isinstance(v, (str, int, float, bool)):
+                context[k] = str(v)
+                context[f"paths.{k}"] = str(v)
 
         expanded = expand_tokens(merged_config, context)
         if expanded == merged_config:
