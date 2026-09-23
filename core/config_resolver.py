@@ -38,7 +38,9 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
     return merged
 
 
-def flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = ".") -> Dict[str, str]:
+def flatten_dict(
+    d: Dict[str, Any], parent_key: str = "", sep: str = "."
+) -> Dict[str, str]:
     """Flattens nested dictionary into dot-separated key-value pairs."""
     items = []
     for k, v in d.items():
@@ -70,7 +72,11 @@ def find_workspace_root(start_path: Path) -> Path:
     """Detects workspace root by inspecting parent directories for boundary markers."""
     curr = start_path.resolve()
     for parent in [curr, *curr.parents]:
-        if (parent / "CMakeLists.txt").exists() or (parent / "tasks.py").exists() or (parent / ".git").exists():
+        if (
+            (parent / "CMakeLists.txt").exists()
+            or (parent / "tasks.py").exists()
+            or (parent / ".git").exists()
+        ):
             return parent
     return curr
 
@@ -103,7 +109,11 @@ def resolve_config(
             cfg = deep_merge(base_cfg, cfg)
 
     # 2. Inject canonical workspace root context
-    root = Path(workspace_root).resolve() if workspace_root else find_workspace_root(cfg_file.parent)
+    root = (
+        Path(workspace_root).resolve()
+        if workspace_root
+        else find_workspace_root(cfg_file.parent)
+    )
     root_str = str(root)
 
     paths_cfg = cfg.setdefault("paths", {})
@@ -132,9 +142,15 @@ def resolve_to_file(
 ) -> Path:
     """Resolves config_*.yaml with SSoT inheritance and writes a flat, standalone YAML file for tools."""
     cfg_file = Path(config_path).resolve()
-    resolved_data = resolve_config(cfg_file, workspace_root=workspace_root, return_node=False)
+    resolved_data = resolve_config(
+        cfg_file, workspace_root=workspace_root, return_node=False
+    )
 
-    root = Path(workspace_root).resolve() if workspace_root else find_workspace_root(cfg_file.parent)
+    root = (
+        Path(workspace_root).resolve()
+        if workspace_root
+        else find_workspace_root(cfg_file.parent)
+    )
 
     if output_path:
         out_file = Path(output_path).resolve()

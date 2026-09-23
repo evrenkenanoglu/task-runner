@@ -37,15 +37,31 @@ def dry_run_all(c: Context, exclude: str = "", stop_on_fail: bool = False) -> No
     all_tasks = _collect_task_names(ns)
 
     # Exclude self and tasks without --dry-run support to prevent false failures or recursion
-    excluded_patterns = ["test.dry-run", "test", "vscode.sync", "deps.compile", "deps.install", "venv.clean", "venv.compile", "venv.create", "venv.install", "venv.setup"]
+    excluded_patterns = [
+        "test.dry-run",
+        "test",
+        "vscode.sync",
+        "deps.compile",
+        "deps.install",
+        "venv.clean",
+        "venv.compile",
+        "venv.create",
+        "venv.install",
+        "venv.setup",
+    ]
     if exclude and str(exclude).strip():
         excluded_patterns.extend([e.strip() for e in exclude.split(",") if e.strip()])
 
     results: List[Tuple[str, str, float, str]] = []
-    print(f"\n🔍 Discovered {len(all_tasks)} total tasks. Running dry-run smoke tests...\n")
+    print(
+        f"\n🔍 Discovered {len(all_tasks)} total tasks. Running dry-run smoke tests...\n"
+    )
 
     for task_name in all_tasks:
-        if any(pattern == task_name or (pattern in task_name and len(pattern) > 4) for pattern in excluded_patterns):
+        if any(
+            pattern == task_name or (pattern in task_name and len(pattern) > 4)
+            for pattern in excluded_patterns
+        ):
             results.append((task_name, "SKIPPED", 0.0, "Excluded / Non-dryrun"))
             continue
 
@@ -59,7 +75,11 @@ def dry_run_all(c: Context, exclude: str = "", stop_on_fail: bool = False) -> No
             results.append((task_name, "PASSED", elapsed, ""))
             print(f"  ✅ {task_name:<44} [{elapsed:.2f}s]")
         else:
-            err_line = (res.stderr or res.stdout or "Command returned non-zero exit code").strip().split("\n")[-1]
+            err_line = (
+                (res.stderr or res.stdout or "Command returned non-zero exit code")
+                .strip()
+                .split("\n")[-1]
+            )
             results.append((task_name, "FAILED", elapsed, err_line))
             print(f"  ❌ {task_name:<44} [{elapsed:.2f}s] -> {err_line}")
             if stop_on_fail:
@@ -80,7 +100,9 @@ def dry_run_all(c: Context, exclude: str = "", stop_on_fail: bool = False) -> No
         print(f"{name:<{col_w}} {status:<10} {duration:>6.2f}s    {short_details}")
 
     print("=" * 82)
-    print(f"Summary: {passed} Passed, {failed} Failed, {skipped} Skipped (Total: {len(results)})")
+    print(
+        f"Summary: {passed} Passed, {failed} Failed, {skipped} Skipped (Total: {len(results)})"
+    )
     print("=" * 82 + "\n")
 
     if failed > 0:

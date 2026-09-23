@@ -46,7 +46,11 @@ def _find_root_config() -> Path:
     env_override = os.environ.get("TASK_CONFIG_PATH")
     if env_override:
         custom_path = Path(env_override)
-        return custom_path if custom_path.is_absolute() else (WORKSPACE_DIR / custom_path).resolve()
+        return (
+            custom_path
+            if custom_path.is_absolute()
+            else (WORKSPACE_DIR / custom_path).resolve()
+        )
 
     candidates = [
         WORKSPACE_DIR / "configs" / "config_tasks.yaml",
@@ -67,7 +71,9 @@ def _resolve_paths(paths_dict: Dict[str, Any]) -> Dict[str, Path]:
     for key, val in paths_dict.items():
         if isinstance(val, str):
             p = Path(val)
-            resolved[key] = p.resolve() if p.is_absolute() else (WORKSPACE_DIR / p).resolve()
+            resolved[key] = (
+                p.resolve() if p.is_absolute() else (WORKSPACE_DIR / p).resolve()
+            )
         elif isinstance(val, Path):
             resolved[key] = val.resolve()
         else:
@@ -108,7 +114,9 @@ def load_config() -> ConfigNode:
                 continue
             discovered_sub_configs.append(resolved_path)
 
-    discovered_sub_configs = sorted(list(set(discovered_sub_configs)), key=lambda p: len(p.parts))
+    discovered_sub_configs = sorted(
+        list(set(discovered_sub_configs)), key=lambda p: len(p.parts)
+    )
 
     for sub_config_path in discovered_sub_configs:
         sub_data = resolve_config(
@@ -124,7 +132,7 @@ def load_config() -> ConfigNode:
 
     for _ in range(5):
         context = flatten_dict(merged_config)
-        
+
         # Inject standard root aliases
         context["workspace_dir"] = root_str
         context["project_root"] = root_str
@@ -150,7 +158,9 @@ def load_config() -> ConfigNode:
     for key, val in paths_dict.items():
         if isinstance(val, (str, Path)):
             p = Path(val)
-            resolved_paths[key] = p.resolve() if p.is_absolute() else (WORKSPACE_DIR / p).resolve()
+            resolved_paths[key] = (
+                p.resolve() if p.is_absolute() else (WORKSPACE_DIR / p).resolve()
+            )
         else:
             resolved_paths[key] = val
 
@@ -174,7 +184,9 @@ def load_config() -> ConfigNode:
 
     execution_env = os.environ.copy()
     if venv_bin_dir.exists():
-        execution_env["PATH"] = f"{venv_bin_dir}{os.pathsep}{execution_env.get('PATH', '')}"
+        execution_env["PATH"] = (
+            f"{venv_bin_dir}{os.pathsep}{execution_env.get('PATH', '')}"
+        )
         execution_env["VIRTUAL_ENV"] = str(venv_dir)
 
     execution_env["PYTHONIOENCODING"] = "utf-8"

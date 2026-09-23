@@ -14,6 +14,7 @@ YELLOW = "\033[33m"
 MAGENTA = "\033[35m"
 GRAY = "\033[90m"
 
+
 class CommandSerializer:
     """Encapsulates command chaining, formatting, logging, and execution."""
 
@@ -29,7 +30,9 @@ class CommandSerializer:
         self.pty = (not IS_WINDOWS) if pty is None else pty
         self._commands: List[str] = [cmd for cmd in (prefix_commands or []) if cmd]
 
-    def add(self, command: Union[str, List[str]], extra: str = "") -> "CommandSerializer":
+    def add(
+        self, command: Union[str, List[str]], extra: str = ""
+    ) -> "CommandSerializer":
         if isinstance(command, list):
             self._commands.extend(command)
         else:

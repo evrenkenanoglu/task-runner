@@ -8,24 +8,25 @@ from core import WORKSPACE_DIR
 
 IGNORED_PARAMS = {"c", "ctx", "opts", "extra"}
 
+
 def _format_label(task_name: str) -> str:
     """Format 'es.esp32.chip-info' into 'ES: ESP32 Chip Info'."""
     parts = task_name.split(".")
     formatted_parts = []
     for part in parts:
         words = part.replace("_", " ").replace("-", " ").split()
-        formatted_words = [
-            w.upper() if len(w) <= 3 else w.capitalize() for w in words
-        ]
+        formatted_words = [w.upper() if len(w) <= 3 else w.capitalize() for w in words]
         formatted_parts.append(" ".join(formatted_words))
 
     if len(formatted_parts) > 1:
         return f"{formatted_parts[0]}: {' '.join(formatted_parts[1:])}"
     return formatted_parts[0]
 
+
 def _sanitize_id(name: str) -> str:
     """Convert a name to a valid VS Code input ID."""
     return re.sub(r"[^a-zA-Z0-9_]", "_", name)
+
 
 def _extract_task_inputs_and_args(
     task_name: str, t: Any
@@ -59,15 +60,18 @@ def _extract_task_inputs_and_args(
         if default is not inspect.Parameter.empty and default is not None:
             default_val = str(default)
 
-        inputs.append({
-            "id": input_id,
-            "type": "promptString",
-            "description": f"{help_desc} (--{cli_flag})",
-            "default": default_val,
-        })
+        inputs.append(
+            {
+                "id": input_id,
+                "type": "promptString",
+                "description": f"{help_desc} (--{cli_flag})",
+                "default": default_val,
+            }
+        )
         cli_args.append(f"--{cli_flag}=${{input:{input_id}}}")
 
     return cli_args, inputs
+
 
 def _collect_tasks_and_inputs(
     collection: Collection, prefix: str = ""
@@ -103,6 +107,7 @@ def _collect_tasks_and_inputs(
 
     return all_tasks, all_inputs
 
+
 @task(
     help={
         "clean": "Overwrite .vscode/tasks.json completely instead of merging",
@@ -130,12 +135,12 @@ def sync(c: Context, clean: bool = False) -> None:
             existing_data = {"version": "2.0.0", "tasks": [], "inputs": []}
 
     non_invoke_tasks = [
-        t for t in existing_data.get("tasks", [])
-        if t.get("command") != "inv"
+        t for t in existing_data.get("tasks", []) if t.get("command") != "inv"
     ]
 
     existing_non_invoke_inputs = [
-        inp for inp in existing_data.get("inputs", [])
+        inp
+        for inp in existing_data.get("inputs", [])
         if not any(inp.get("id") == gen_inp["id"] for gen_inp in generated_inputs)
     ]
 
@@ -145,4 +150,6 @@ def sync(c: Context, clean: bool = False) -> None:
     with tasks_json_path.open("w", encoding="utf-8") as f:
         json.dump(existing_data, f, indent=2)
 
-    print(f"Synced {len(generated_tasks)} tasks and {len(generated_inputs)} inputs to {tasks_json_path}")
+    print(
+        f"Synced {len(generated_tasks)} tasks and {len(generated_inputs)} inputs to {tasks_json_path}"
+    )

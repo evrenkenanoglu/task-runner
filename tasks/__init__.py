@@ -30,7 +30,10 @@ IGNORE_DIRS = {
 
 ns = Collection()
 
-def register_directory(tasks_dir: Path, collection: Collection, prefix: str = "") -> None:
+
+def register_directory(
+    tasks_dir: Path, collection: Collection, prefix: str = ""
+) -> None:
     """Recursively discover and load task modules from a directory."""
     if not tasks_dir.exists():
         return
@@ -71,6 +74,7 @@ def register_directory(tasks_dir: Path, collection: Collection, prefix: str = ""
         except ValueError:
             pass
 
+
 # ----------------------------------------------------------------------
 # 1. Built-in Tool Tasks (e.g. task-runner/tasks/venv.py)
 # ----------------------------------------------------------------------
@@ -91,7 +95,11 @@ for name in ["Tasks", "tasks"]:
 aliases = CONFIG.get("task_namespaces", {})
 
 for item in WORKSPACE_DIR.iterdir():
-    if not item.is_dir() or item.name in IGNORE_DIRS or item.resolve() == TOOL_DIR.resolve():
+    if (
+        not item.is_dir()
+        or item.name in IGNORE_DIRS
+        or item.resolve() == TOOL_DIR.resolve()
+    ):
         continue
 
     for tasks_folder_name in ["Tasks", "tasks"]:

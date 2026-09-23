@@ -3,6 +3,7 @@ from pathlib import Path
 from invoke import Context, task
 from core import CONFIG, IS_WINDOWS, CommandSerializer
 
+
 @task(
     help={
         "input_file": "Source requirements.in file",
@@ -35,6 +36,7 @@ def compile(
     serializer.add(cmd)
     serializer.run(c)
 
+
 @task(
     help={
         "python_version": "Python version to provision via uv (e.g. 3.12, 3.13)",
@@ -61,6 +63,7 @@ def create(
     serializer.add(cmd)
     serializer.run(c)
 
+
 @task(
     help={
         "requirements": "Path to requirements.txt lockfile",
@@ -79,11 +82,14 @@ def install(
 
     upgrade_flag = "--upgrade" if upgrade else ""
     python_bin = CONFIG.paths.venv_bin_dir / ("python.exe" if IS_WINDOWS else "python")
-    cmd = f'uv pip install -r "{req_file}" --python "{python_bin}" {upgrade_flag}'.strip()
+    cmd = (
+        f'uv pip install -r "{req_file}" --python "{python_bin}" {upgrade_flag}'.strip()
+    )
 
     serializer = CommandSerializer()
     serializer.add(cmd)
     serializer.run(c)
+
 
 @task
 def clean(c: Context) -> None:
@@ -94,6 +100,7 @@ def clean(c: Context) -> None:
         print(f"Removed virtual environment: {venv_dir}")
     else:
         print(f"Virtual environment does not exist: {venv_dir}")
+
 
 @task(
     help={
