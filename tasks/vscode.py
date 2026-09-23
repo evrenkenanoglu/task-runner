@@ -1,8 +1,9 @@
+import enum
 import inspect
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Literal, Tuple, get_args, get_origin
 from invoke import Collection, Context, task
 from core import WORKSPACE_DIR
 
@@ -31,7 +32,7 @@ def _sanitize_id(name: str) -> str:
 def _extract_task_inputs_and_args(
     task_name: str, t: Any
 ) -> Tuple[List[str], List[Dict[str, Any]]]:
-    """Generate CLI args referencing VS Code inputs for non-boolean parameters."""
+    """Generate CLI args referencing VS Code inputs (pickString for Literals/Enums, promptString for others)."""
     if not t.body:
         return [task_name], []
 
@@ -48,26 +49,44 @@ def _extract_task_inputs_and_args(
 
         default = param.default
 
-        # Boolean flags are toggle switches in Invoke (e.g. --dry-run), not key-value pairs
+        # Boolean flags are toggle switches in Invoke (e.g. --dry-run), not key-value inputs
         if isinstance(default, bool):
             continue
 
         cli_flag = name.replace("_", "-")
         input_id = f"{task_prefix}_{name}"
-        help_desc = task_help_dict.get(name, f"Value for --{cli_flag}")
+        help_desc = task_help_dict.get(name, f"Select or enter value for --{cli_flag}")
 
         default_val = ""
         if default is not inspect.Parameter.empty and default is not None:
             default_val = str(default)
 
-        inputs.append(
-            {
+        # Inspect parameter annotation for Literal or Enum choices
+        annotation = param.annotation
+        options: List[str] = []
+
+        if get_origin(annotation) is Literal:
+            options = [str(arg) for arg in get_args(annotation)]
+        elif isinstance(annotation, type) and issubclass(annotation, enum.Enum):
+            options = [str(member.value) for member in annotation]
+
+        if options:
+            input_entry = {
+                "id": input_id,
+                "type": "pickString",
+                "description": f"{help_desc} (--{cli_flag})",
+                "options": options,
+                "default": default_val if default_val in options else options[0],
+            }
+        else:
+            input_entry = {
                 "id": input_id,
                 "type": "promptString",
                 "description": f"{help_desc} (--{cli_flag})",
                 "default": default_val,
             }
-        )
+
+        inputs.append(input_entry)
         cli_args.append(f"--{cli_flag}=${{input:{input_id}}}")
 
     return cli_args, inputs
