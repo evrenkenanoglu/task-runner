@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Tuple, get_args, get_origin
 from invoke import Collection, Context, task
-from core import WORKSPACE_DIR
+from core import IS_WINDOWS, WORKSPACE_DIR
 
 IGNORED_PARAMS = {"c", "ctx", "opts", "extra"}
 
@@ -133,7 +133,7 @@ def _collect_tasks_and_inputs(
     }
 )
 def sync(c: Context, clean: bool = False) -> None:
-    """Auto-generate .vscode/tasks.json with interactive task inputs."""
+    """Auto-generate .vscode/tasks.json with interactive task inputs and .venv environment."""
     from tasks import ns
 
     vscode_dir = WORKSPACE_DIR / ".vscode"
@@ -163,6 +163,46 @@ def sync(c: Context, clean: bool = False) -> None:
         if not any(inp.get("id") == gen_inp["id"] for gen_inp in generated_inputs)
     ]
 
+    # [CRITICAL] Inject .venv into PATH for all VS Code task executions
+    venv_bin_rel = ".venv/Scripts" if IS_WINDOWS else ".venv/bin"
+    path_sep = ";" if IS_WINDOWS else ":"
+
+    # --------------------------------------------------------------------------
+    # Truly Cross-Platform: Define native environment blocks for each OS
+    # --------------------------------------------------------------------------
+    existing_data["options"] = {
+        "env": {
+            "VIRTUAL_ENV": "${workspaceFolder}/.venv"
+        }
+    }
+
+    # POSIX / Linux / WSL
+    existing_data["linux"] = {
+        "options": {
+            "env": {
+                "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
+            }
+        }
+    }
+
+    # macOS
+    existing_data["osx"] = {
+        "options": {
+            "env": {
+                "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
+            }
+        }
+    }
+
+    # Native Windows (PowerShell / CMD)
+    existing_data["windows"] = {
+        "options": {
+            "env": {
+                "PATH": "${workspaceFolder}/.venv/Scripts;${env:PATH}"
+            }
+        }
+    }
+
     existing_data["tasks"] = non_invoke_tasks + generated_tasks
     existing_data["inputs"] = existing_non_invoke_inputs + generated_inputs
 
@@ -170,5 +210,5 @@ def sync(c: Context, clean: bool = False) -> None:
         json.dump(existing_data, f, indent=2)
 
     print(
-        f"Synced {len(generated_tasks)} tasks and {len(generated_inputs)} inputs to {tasks_json_path}"
+        f"Synced {len(generated_tasks)} tasks and {len(generated_inputs)} inputs to {tasks_json_path} (with .venv PATH active)"
     )

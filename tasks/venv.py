@@ -17,23 +17,33 @@ def compile(
     output_file: str = "requirements.txt",
     upgrade: bool = False,
 ) -> None:
-    """Compile requirements.in to requirements.txt using uv."""
+    """Compile requirements.in to requirements.txt using uv with clean local paths."""
     in_path = Path(input_file)
-    if not in_path.is_absolute():
-        in_path = CONFIG.paths.tool_dir / in_path
-
     out_path = Path(output_file)
-    if not out_path.is_absolute():
-        out_path = CONFIG.paths.tool_dir / out_path
 
-    if not in_path.exists():
-        raise FileNotFoundError(f"Source requirements file not found: {in_path}")
+    # 1. Determine the target folder and local filenames
+    if not in_path.is_absolute():
+        target_dir = Path(CONFIG.paths.tool_dir).resolve()
+        in_name = in_path.name
+        out_name = out_path.name
+    else:
+        target_dir = in_path.parent.resolve()
+        in_name = in_path.name
+        out_name = out_path.name
 
+    target_in = target_dir / in_name
+    if not target_in.exists():
+        raise FileNotFoundError(f"Source requirements file not found: {target_in}")
+
+    # 2. cd into the directory first so uv outputs clean relative references
     upgrade_flag = "--upgrade" if upgrade else ""
-    cmd = f'uv pip compile "{in_path}" -o "{out_path}" --annotation-style line {upgrade_flag}'.strip()
+    cd_cmd = f'cd /d "{target_dir}"' if IS_WINDOWS else f'cd "{target_dir}"'
+    compile_cmd = (
+        f'uv pip compile "{in_name}" -o "{out_name}" --annotation-style line {upgrade_flag}'
+    ).strip()
 
     serializer = CommandSerializer()
-    serializer.add(cmd)
+    serializer.add(f"{cd_cmd} && {compile_cmd}")
     serializer.run(c)
 
 
