@@ -29,6 +29,19 @@ IGNORE_DIRS = {
 
 ns = Collection()
 
+# UTF-8 stdio baseline for every child process launched by any task (Tier 1-3).
+ns.configure(
+    {
+        "run": {
+            "env": {
+                "PYTHONUTF8": "1",
+                "PYTHONIOENCODING": "utf-8",
+            },
+            "encoding": "utf-8",
+        }
+    }
+)
+
 
 def _slugify(name: str) -> str:
     """Normalize PascalCase, camelCase, and snake_case to canonical kebab-case."""
