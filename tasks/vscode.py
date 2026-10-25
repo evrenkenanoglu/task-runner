@@ -170,37 +170,21 @@ def sync(c: Context, clean: bool = False) -> None:
     # --------------------------------------------------------------------------
     # Truly Cross-Platform: Define native environment blocks for each OS
     # --------------------------------------------------------------------------
-    existing_data["options"] = {
-        "env": {
-            "VIRTUAL_ENV": "${workspaceFolder}/.venv"
-        }
-    }
+    existing_data["options"] = {"env": {"VIRTUAL_ENV": "${workspaceFolder}/.venv"}}
 
     # POSIX / Linux / WSL
     existing_data["linux"] = {
-        "options": {
-            "env": {
-                "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
-            }
-        }
+        "options": {"env": {"PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"}}
     }
 
     # macOS
     existing_data["osx"] = {
-        "options": {
-            "env": {
-                "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
-            }
-        }
+        "options": {"env": {"PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"}}
     }
 
     # Native Windows (PowerShell / CMD)
     existing_data["windows"] = {
-        "options": {
-            "env": {
-                "PATH": "${workspaceFolder}/.venv/Scripts;${env:PATH}"
-            }
-        }
+        "options": {"env": {"PATH": "${workspaceFolder}/.venv/Scripts;${env:PATH}"}}
     }
 
     existing_data["tasks"] = non_invoke_tasks + generated_tasks
