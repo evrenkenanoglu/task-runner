@@ -11,7 +11,7 @@ IGNORED_PARAMS = {"c", "ctx", "opts", "extra"}
 
 
 def _format_label(task_name: str) -> str:
-    """Format 'es.esp32.chip-info' into 'ES: ESP32 Chip Info'."""
+    """Format 'es.platform.chip-info' into 'ES: ESP32 Chip Info'."""
     parts = task_name.split(".")
     formatted_parts = []
     for part in parts:
