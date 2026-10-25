@@ -108,16 +108,18 @@ def resolve_config(
             )
             cfg = deep_merge(base_cfg, cfg)
 
-    # 2. Inject canonical workspace root context
+    # 2. Inject canonical workspace root and config file directory context
     root = (
         Path(workspace_root).resolve()
         if workspace_root
         else find_workspace_root(cfg_file.parent)
     )
     root_str = str(root)
+    cfg_dir_str = str(cfg_file.parent.resolve())  # [NEW] Path of the config file's folder
 
     paths_cfg = cfg.setdefault("paths", {})
     paths_cfg.setdefault("workspace_dir", root_str)
+    paths_cfg.setdefault("config_dir", cfg_dir_str)  # [NEW] Anchor token
 
     # 3. Multi-pass token resolution
     for _ in range(max_passes):
@@ -126,6 +128,8 @@ def resolve_config(
         context["project_root"] = root_str
         context["project_root_dir"] = root_str
         context["paths.workspace_dir"] = root_str
+        context["config_dir"] = cfg_dir_str          # [NEW] Expose token
+        context["paths.config_dir"] = cfg_dir_str
 
         expanded = expand_tokens(cfg, context)
         if expanded == cfg:
