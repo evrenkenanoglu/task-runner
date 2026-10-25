@@ -13,7 +13,14 @@ from typing import Any, Dict, List, Optional, Set
 from invoke import Collection
 
 DEFAULT_IGNORE_DIRS: Set[str] = {
-    ".git", ".venv", "venv", "build", "dist", "__pycache__", ".idea", ".vscode"
+    ".git",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "__pycache__",
+    ".idea",
+    ".vscode",
 }
 
 
@@ -58,16 +65,22 @@ class TaskDiscovery:
             spec.loader.exec_module(module)
             return module
         except Exception as err:
-            sys.stderr.write(f"\033[33m⚠️  [DISCOVERY WARN] Skipping '{resolved}': {err}\033[0m\n")
+            sys.stderr.write(
+                f"\033[33m⚠️  [DISCOVERY WARN] Skipping '{resolved}': {err}\033[0m\n"
+            )
             sys.modules.pop(module_name, None)
             return None
 
-    def mount_module(self, module: ModuleType, target_collection: Collection, name: str) -> bool:
+    def mount_module(
+        self, module: ModuleType, target_collection: Collection, name: str
+    ) -> bool:
         slug_name = _slugify(name)
         try:
             col = Collection.from_module(module, name=slug_name)
         except Exception as err:
-            sys.stderr.write(f"\033[33m⚠️  [DISCOVERY WARN] Could not mount '{name}': {err}\033[0m\n")
+            sys.stderr.write(
+                f"\033[33m⚠️  [DISCOVERY WARN] Could not mount '{name}': {err}\033[0m\n"
+            )
             return False
 
         if col.tasks or col.collections:
@@ -75,7 +88,13 @@ class TaskDiscovery:
             return True
         return False
 
-    def discover_tools(self, search_root: Path, root_col: Collection, namespace: str, task_filename: str) -> int:
+    def discover_tools(
+        self,
+        search_root: Path,
+        root_col: Collection,
+        namespace: str,
+        task_filename: str,
+    ) -> int:
         root_dir = search_root.resolve()
         if not root_dir.exists():
             return 0
@@ -98,7 +117,9 @@ class TaskDiscovery:
 
         return mounted
 
-    def discover_files(self, search_root: Path, root_col: Collection, namespace: str, pattern: str) -> int:
+    def discover_files(
+        self, search_root: Path, root_col: Collection, namespace: str, pattern: str
+    ) -> int:
         root_dir = search_root.resolve()
         if not root_dir.exists():
             return 0
@@ -123,7 +144,11 @@ class TaskDiscovery:
         return mounted
 
     def discover_from_config(self, config: Any, root_collection: Collection) -> None:
-        discovery_rules = config.get("discovery", {}).get("tasks", []) if hasattr(config, "get") else []
+        discovery_rules = (
+            config.get("discovery", {}).get("tasks", [])
+            if hasattr(config, "get")
+            else []
+        )
         for rule in discovery_rules:
             raw_path = rule.get("path")
             if not raw_path:
@@ -134,6 +159,10 @@ class TaskDiscovery:
             mode = rule.get("mode", "flat")
 
             if mode in ("flat", "tree"):
-                self.discover_tools(path, root_collection, ns, rule.get("task_filename", "tasks.py"))
+                self.discover_tools(
+                    path, root_collection, ns, rule.get("task_filename", "tasks.py")
+                )
             else:
-                self.discover_files(path, root_collection, ns, rule.get("pattern", "*.py"))
+                self.discover_files(
+                    path, root_collection, ns, rule.get("pattern", "*.py")
+                )

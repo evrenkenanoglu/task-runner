@@ -37,7 +37,9 @@ def _slugify(name: str) -> str:
     return s.lower().strip("-")
 
 
-def register_tasks_dir(tasks_dir: Path, collection: Collection, prefix: str = "") -> None:
+def register_tasks_dir(
+    tasks_dir: Path, collection: Collection, prefix: str = ""
+) -> None:
     """Discovers standalone task files (e.g. *.py in embedded_system/Tasks/)."""
     if not tasks_dir.exists():
         return
@@ -63,8 +65,8 @@ def register_tasks_dir(tasks_dir: Path, collection: Collection, prefix: str = ""
 
 def register_tools_dir(tools_root: Path, tools_collection: Collection) -> None:
     """Recursively finds all 'tasks.py' files and mounts them FLAT under tools.<tool-name>.
-    
-    Moving a tool inside Tools/ (e.g. Tools/AI/Tool or Tools/Tool) will NEVER change 
+
+    Moving a tool inside Tools/ (e.g. Tools/AI/Tool or Tools/Tool) will NEVER change
     its command name!
     """
     if not tools_root.exists():

@@ -115,7 +115,9 @@ def resolve_config(
         else find_workspace_root(cfg_file.parent)
     )
     root_str = str(root)
-    cfg_dir_str = str(cfg_file.parent.resolve())  # [NEW] Path of the config file's folder
+    cfg_dir_str = str(
+        cfg_file.parent.resolve()
+    )  # [NEW] Path of the config file's folder
 
     paths_cfg = cfg.setdefault("paths", {})
     paths_cfg.setdefault("workspace_dir", root_str)
@@ -128,7 +130,7 @@ def resolve_config(
         context["project_root"] = root_str
         context["project_root_dir"] = root_str
         context["paths.workspace_dir"] = root_str
-        context["config_dir"] = cfg_dir_str          # [NEW] Expose token
+        context["config_dir"] = cfg_dir_str  # [NEW] Expose token
         context["paths.config_dir"] = cfg_dir_str
 
         expanded = expand_tokens(cfg, context)
