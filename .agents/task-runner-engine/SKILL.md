@@ -168,3 +168,7 @@ Whenever modifying any file inside `Tools/task-runner/`:
    inv venv.compile
    ```
    *(Must compile `requirements.in` to `requirements.txt` via `uv` without errors).*
+
+## Error Registry Maintenance
+
+Before engine work, review Section 4's incident registry. Record each verified, reusable mistake discovered during the task there before considering the work complete, including symptom, root cause, and prevention. Do not record speculation, transient output, or secrets.
